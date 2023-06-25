@@ -1,65 +1,58 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet } from 'react-native';
-import { auth,signInAnonymously,signInWithEmailAndPassword } from '../firebase'; // Importez l'objet d'authentification Firebase
+import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
+import { auth, signInWithEmailAndPassword } from '../firebase'; // Importez l'objet d'authentification Firebase
 import { useNavigation } from '@react-navigation/native'; // Importez le hook useNavigation
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigation = useNavigation();
 
+  // Fonction de check de champ et de connexion
   const handleLogin = () => {
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Connexion réussie
-        // console.log('Utilisateur connecté :', userCredential.user);        
-        navigation.navigate('Home'); // Naviguer vers la page d'accueil après une connexion réussie
-        // Ajoutez ici le code supplémentaire que vous souhaitez exécuter après une connexion réussie
-      })
-      .catch((error) => {
-        // Erreur de connexion
-        console.log('Erreur de connexion :', error);
-      });
-  };
-  
+    if (email === '' || password === '') {
+      setError('Veuillez remplir tous les champs'); // Vérification des champs vides
+      return;
+    }
 
-  const testFirebaseConnection = () => {
-    console.log('Tentative de connexion à Firebase...');
-    signInAnonymously(auth)
-      .then(() => {
-        console.log('Connexion à Firebase réussie !');
-        // Vous pouvez ajouter ici le code supplémentaire que vous souhaitez exécuter après la connexion réussie
-      })
-      .catch((error) => {
-        console.log('Erreur de connexion à Firebase :', error);
-      });
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          // Connexion réussie
+          navigation.navigate('Home'); // Naviguer vers la page d'accueil après une connexion réussie
+          // Ajoutez ici le code supplémentaire que vous souhaitez exécuter après une connexion réussie
+        })
+        .catch((error) => {
+          // Erreur de connexion
+          setError('Erreur de connexion'); // Affichage de l'erreur de connexion
+          console.log('Erreur de connexion :', error);
+        });
   };
-  
-  
 
   const handleRegister = () => {
     navigation.navigate('Register');
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={text =>setEmail(text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mot de passe"
-        value={password}
-        onChangeText={text =>setPassword(text)}
-        secureTextEntry
-      />
-      <Button title="Se connecter" onPress={handleLogin} />
-      <Button title="S'inscrire" onPress={handleRegister} />
-      {/* <Button title="Tester la connexion Firebase" onPress={testFirebaseConnection} /> */}
-    </View>
+      <View style={styles.container}>
+        <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={(text) => setEmail(text)}
+        />
+        <TextInput
+            style={styles.input}
+            placeholder="Mot de passe"
+            value={password}
+            onChangeText={(text) => setPassword(text)}
+            secureTextEntry
+        />
+        <Button title="Se connecter" onPress={handleLogin} />
+
+        {error !== '' && <Text style={styles.error}>{error}</Text>}
+        <Button title="S'inscrire" onPress={handleRegister} />
+      </View>
   );
 };
 
@@ -77,6 +70,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
   },
 });
 

@@ -1,25 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, Button, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { firestore } from '../firebase';
+import { firestore, auth } from '../firebase';
+import { useNavigation } from '@react-navigation/native'; // Importez le hook useNavigation
 
 const Home = () => {
-  const [locations, setLocations] = useState([]);
   // const [refreshing, setRefreshing] = useState(false);
+  const [locations, setLocations] = useState([]); // État pour stocker les emplacements
+  const navigation = useNavigation(); // Utilisation du hook useNavigation pour la navigation
 
   useEffect(() => {
-    fetchLocations();
+    fetchLocations(); // Appel de la fonction fetchLocations au chargement du composant
   }, []);
 
+  // Fonction pour récupérer les emplacements depuis Firestore
   const fetchLocations = async () => {
     try {
-      const locationsRef = firestore.collection('LOCATIONS');
-      const snapshot = await locationsRef.get();   
-      const data = snapshot.docs.map((doc) => doc.data()); 
-      setLocations(data);
+      const locationsRef = firestore.collection('LOCATIONS'); // Référence à la collection "LOCATIONS" dans Firestore
+      const snapshot = await locationsRef.get(); // Obtention des documents de la collection
+      const data = snapshot.docs.map((doc) => doc.data()); // Récupération des données des documents
+      setLocations(data); // Mise à jour de l'état "locations" avec les données récupérées
     } catch (error) {
       console.error('Erreur lors de la récupération des locations :', error);
     }
   };
+
+  // Fonction pour gérer la déconnexion de l'utilisateur
+  const handleLogout = () => {
+    auth.signOut() // Déconnexion de l'utilisateur
+        .then(() => {
+          console.log('Utilisateur déconnecté avec succès');
+          navigation.navigate('Login'); // Naviguer vers la page de connexion après la déconnexion
+          // Ajoutez ici le code supplémentaire que vous souhaitez exécuter après la déconnexion
+        })
+        .catch((error) => {
+          console.error('Erreur lors de la déconnexion :', error);
+        });
+  };
+
 
   // const handleReservation = async (locationId) => {
   //   const locationRef = firestore.collection('LOCATIONS').doc(locationId);
@@ -47,28 +64,28 @@ const Home = () => {
   // };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      // refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <Text>Bonjour</Text>
-      {locations.map((location) => (
-        <View style={styles.locationCard} key={location.id}>
-          <Image source={{ uri: location.photo }} style={styles.locationImage} />
-          <Text style={styles.locationName}>{location.nom}</Text>
-          <Text style={styles.locationDescription}>{location.description}</Text>
-          <Text style={styles.locationDescription}>{location.localisation}</Text>
-          <Text style={styles.locationPrice}>{location.prix} €</Text>
-          {location.disponible && (
-            <Button
-              title="Réserver"
-              // onPress={() => handleReservation(location.id)}
-              color="#841584"
-            />
-          )}
-        </View>
-      ))}
-    </ScrollView>
+      <ScrollView
+          contentContainerStyle={styles.container}
+          // refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {locations.map((location) => (
+            <View style={styles.locationCard} key={location.id}>
+              <Image source={{ uri: location.photo }} style={styles.locationImage} />
+              <Text style={styles.locationName}>{location.nom}</Text>
+              <Text style={styles.locationDescription}>{location.description}</Text>
+              <Text style={styles.locationDescription}>{location.localisation}</Text>
+              <Text style={styles.locationPrice}>{location.prix} €</Text>
+              {location.disponible && (
+                  <Button
+                      title="Réserver"
+                      // onPress={() => handleReservation(location.id)}
+                      color="#841584"
+                  />
+              )}
+            </View>
+        ))}
+        <Button title="Déconnexion" onPress={handleLogout} color="#FF0000" />
+      </ScrollView>
   );
 };
 
